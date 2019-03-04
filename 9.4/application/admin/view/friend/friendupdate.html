@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>友链添加</title>
+    <!--<link rel="stylesheet" href="__STATIC__/layui/cass/layui.css" media="all">-->
+    <script src="__STATIC__/layui/jquery-3.2.1.min.js"></script>
+    <script src="__STATIC__/layui/layui.js"></script>
+</head>
+<body>
+
+<form class="layui-form" method="post">
+    <input type="hidden" name="id" value="{$data.id}">
+    <div class="layui-form-item">
+        <label class="layui-form-label">友链名称</label>
+        <div class="layui-input-inline">
+            <input name="name"  value="{$data.name}" class="layui-input" type="text" placeholder="如:百度"  lay-verify="name">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">友链地址</label>
+        <div class="layui-input-inline">
+            <input name="url"  value="{$data.url}" class="layui-input" type="text" placeholder="如:www.baidu.com" lay-verify="url">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">友链标志</label>
+            <input type="hidden" name="logo"  value="{$data.logo}"  lay-verify="logo">
+            <button type="button" class="layui-btn" id="file">
+                <i class="layui-icon"></i>上传图片
+            </button>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-filter="*" lay-submit="">修改</button>
+            <button class="layui-btn layui-btn-primary" type="reset">重置</button>
+        </div>
+    </div>
+</form>
+</body>
+</html>
+<script>
+    $(function(){
+        //阻止提交
+        layui.use(['form','layer','upload'], function(){
+            var form = layui.form;
+            var layer=layui.layer;
+            var upload = layui.upload;
+
+            //js表单验证
+            form.verify({
+
+                //验证链接名称
+                name: function(value, item) { //value：表单的值、item：表单的DOM对象
+                    //正则表达式
+                    var font;
+                    var username_reg = /^[\u4e00-\u9fa5]{1,14}$/i;
+                    if(value==''){
+                        return "链接名不能为空";
+                    }else if(!username_reg.test(value)){
+                        return "链接名为汉字";
+                    }else{
+                        $.ajax({
+                            url:"{:url('Friend/checkName')}",
+                            type:'post',
+                            data:{name:value},
+                            async:false,//不是异步  是同步
+                            success:function(msg){
+                                //console.log(msg);
+                                if(msg=="no"){
+                                    font="链接名已存在";
+                                }
+                            }
+                        });
+                        return font;
+                    }
+                },
+                url:function(value,item){
+                    //正则表达式
+                    var url_reg=/^(((ht|f)tp(s?)):\/\/)?(www.|[a-zA-Z].)[a-zA-Z0-9\-\.]+\.(com|cn|edu|gov|mil|net|org|biz|info|name|museum|us|ca|uk)$/i;
+                    if(value==''){
+                        return "网址不能为空";
+                    }else if(!url_reg.test(value)){
+                        return "请输入正确的网址格式";
+                    }
+                }
+            });
+
+
+
+            //执行实例  文件上传
+            var uploadInst = upload.render({
+                elem: '#file' //绑定元素
+                ,url: "{:url('Friend/logoUpload')}" //上传接口
+                //,multiple:true  //多文件上传
+                // ,number:4  //上传数量
+                ,done: function(res){
+                    //console.log(res)
+                    layer.msg(res.font,{'icon':res.code});
+                    //console.log(res.src)
+                    $("input[type='hidden']").val(res.src);
+                    //多文件上传
+                    /*if(res.code==1){
+                     //把出value值取出来 拼接上路径 复制到value中
+                     var logo_src=$("input[type='hidden']").val(res.src);
+                     logo_src+=res.src+"|";
+                     $("input[type='hidden']").val(logo_src)
+                     }*/
+                }
+                ,error: function(){
+                    //请求异常回调
+                }
+            });
+
+
+            //监听提交  通过ajax提交 不走action提交
+            form.on('submit(*)',function(data){
+                //console.log(data.elem);//被执行事件的元素dom对象，一般为botton对象
+                //console.log(data.form);//被执行提交的form对象，一般在存在form标签时才返回
+                //console.log(data.field);//当前容器的全部表单字段,名对值形势
+
+                $.post("{:url('Friend/friendUpdateDo')}",data.field,function(msg){
+                            console.log(msg);//ok
+                            layer.msg(msg.font,{icon:msg.code});
+                            if(msg.code==1){
+                                //跳展示页面  可不跳
+                                // location.href="{:url('friend/FriendList')}";
+                            }
+                        },'json'
+
+                );
+                return false;//组织表单跳转,如果需要表单跳转，去掉即可
+            })
+
+        })
+    })
+</script>
+
+

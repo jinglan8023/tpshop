@@ -1,0 +1,211 @@
+{layout name="layout/layout3"/}
+<!--End Menu End--> 
+<div class="i_bg">
+	<div class="postion">
+    	<span class="fl">
+            全部 >
+            {if condition='$one neq []'}{$one.cate_name}{/if} >
+            {if condition='$two neq []'} {$two.cate_name}{/if}>
+            {if condition='$three neq []'}
+                {$three.cate_name}
+            {/if}
+    	</span>
+        <span class="n_ch brand_select" style="display: none;">
+            <span class="fl">品牌：<font>香奈儿</font></span>
+            <a href="#" class="close_brand">
+                <img src="__STATIC__/index/images/s_close.gif" />
+            </a>
+        </span>
+        <span class="n_ch price_select" style="display: none;">
+            <span class="fl">价格：<font>200-399</font></span>
+            <a href="#" class="close_price">
+                <img src="__STATIC__/index/images/s_close.gif" />
+            </a>
+        </span>
+    </div>
+    <!--Begin 筛选条件 Begin-->
+    <div class="content mar_10">
+    	<table border="0" class="choice" style="width:100%; font-family:'宋体'; margin:0 auto;" cellspacing="0" cellpadding="0">
+          <tr valign="top">
+            <td width="70">&nbsp; 品牌：</td>
+            <td class="td_a brand">
+            {volist name="brandArr" id="vo"}
+            <a href="javascript:;" brand_id="{$vo.brand_id}">{$vo.brand_name}</a>
+            {/volist}
+            </td>
+          </tr>
+          <tr valign="top" id="price_select">
+            <td>&nbsp; 价格：</td>
+            <td class="td_a price">
+                {volist name="money" id="v"}
+                <a href="javascript:;">{$v}</a>
+               {/volist}
+            </td>
+          </tr>
+        
+        </table>                                                                                 
+    </div>
+    <!--End 筛选条件 End-->
+    
+    <div class="content mar_20">
+    	<div class="l_history">
+        	<div class="his_t">
+            	<span class="fl">浏览历史</span>
+                <span class="fr"><a href="#">清空</a></span>
+            </div>
+        	<ul>
+        	    <!--登录前的浏览历史展示不出来-->
+                {volist name="history" id="v"}
+                    <li>
+                        <div class="img">
+                            <a href="#">
+                                <img src="/{$v.goods_img}" width="185" height="162" />
+                            </a>
+                        </div>
+                        <div class="name"><a href="#">{$v.goods_name}</a></div>
+                        <div class="price">
+                            <font>￥<span>{:formatMoney($v.goods_selfprice)}</span></font> &nbsp; 18R
+                        </div>
+                    </li>
+                {/volist}
+        	</ul>
+        </div>
+        <div class="l_list">
+        	<div class="list_t">
+            	<span class="fl list_or">
+                	<a href="#" order="1" class="now">默认</a>
+                    <a href="#" order="2">
+                    	<span class="fl">销量 <span class="up">↑</span></span>
+
+                    </a>
+                    <a href="#" order="3">
+                    	<span class="fl">价格<span class="up">↑</span></span>
+
+                    </a>
+                    <a href="#" order="4">新品</a>
+                </span>
+                <span class="fr">共发现120件</span>
+            </div>
+            <div class="list_c" id="productList">
+                {include file="product/list"}
+            </div>
+        </div>
+    </div>
+    <script text="text/javascript">
+
+        //点击品牌 品牌在上面显示
+        $('.brand a').click(function(){
+            $('.brand a').removeClass('now');
+            $('.price a').removeClass('now');
+            $(this).addClass('now');
+            $('.brand_select font').text($(this).text());
+            $('.brand_select').show();
+            $('.brand_select').parent().show();
+
+            //接收品牌id
+            //var brand_id=$(this).attr('brand_id');//alert(brand_id);
+            getAjaxPage(1);
+            //点击品牌  价格筛选的样式消失
+            $('.price_select').hide();
+
+        })
+        //点击品牌里的 ×  那个显示的小品牌牌儿  隐藏
+        $('.close_brand').click(function(){
+            $('.brand a').removeClass('now');
+            $(this).parents('.brand_select').hide();
+            getAjaxPage(1);
+        })
+
+        function getAjaxPage(type,order_field,order_type){
+            //获取是否选中品牌
+           var brand_id=$('.brand').find('.now').attr('brand_id');
+            var price=$('.price').find('.now').text();
+            //console.log(brand_id,price);
+
+            var data='';
+            if(brand_id!=''&&brand_id!=undefined){
+                data='brand_id='+brand_id
+            }
+            if(price!=''&&price!=undefined){
+                if(data!=''){
+                    data+='&';
+                }
+                data+= '&price='+price;
+            }
+            //console.log(data);
+            if(order_field != ''){
+                if(data != ''){
+                    data += '&';
+                }
+                    data+='order_field='+order_field+'&order_type='+order_type;
+            }
+            //点击品牌 价格随之变化
+            if(type==1){
+                $.ajax({
+                    url:"{:url('Product/showMoneySelect',['cate_id'=>request()->param('cate_id')])}",
+                    data:data,
+                    type:'post',
+                    dataType:'json',
+                    success:function(message){
+                        //console.log(message);
+                        $('#productList').html(message);
+                    }
+                });
+            }
+
+            //ajax 请求筛选对应品牌下边的商品
+            $.ajax({
+                url:"{:url('Product/productList',['cate_id'=>request()->param('cate_id')])}",
+                data:data,
+                type:'post',
+                dataType:'json',
+                success:function(message){
+                    $('#productList').html(message);
+                }
+            })
+
+        }
+
+        //点击价格
+        $(document).on('click','.price a',function(){
+            $('.price a').removeClass('now');
+            $(this).addClass('now');
+            $('.price_select').show();
+            $('.price_select').parent().show();
+            $('.price_select font').text(($(this).text()));
+
+            //var price=$(this).text();
+            getAjaxPage(2);
+        });
+
+        //点击价格里的 ×
+        $('.close_price').click(function(){
+            $('.price a').removeClass('now');
+            $(this).parents('.price_select').hide();
+            getAjaxPage(2);
+        })
+        //排序功能
+        $('.list_or a').click(function(){
+            $('.list_or a').removeClass('now');
+            $(this).addClass('now');
+            var order_field=$(this).attr('order');
+            var order_type=0;
+            if(order_field==2||order_field==3){
+                var type=$(this).find('.up').text();
+                if(type=='↑'){
+                //1正序 2倒序
+                    order_type=1;
+                    $(this).find('.up').text('↓');
+                }else{
+                    order_type=2;
+                    $(this).find('.up').text('↑');
+                }
+            }
+            getAjaxPage(2,order_field,order_type);
+        })
+
+
+
+
+
+    </script>

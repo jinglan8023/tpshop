@@ -1,0 +1,87 @@
+
+<table class="layui-hide" id="test" lay-filter="table_edit"></table>
+
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<script src="__STATIC__/layui/jquery-3.2.1.min.js"></script>
+<script src="__STATIC__/layui/layui.js"></script>
+
+
+<script>
+    layui.use(['table','layer'], function(){
+        var table = layui.table;
+        var layer=layui.layer;
+        /**动态渲染表格*/
+        table.render({
+            elem: '#test'
+            ,url:"{:url('Friend/friendInfo',['r'=>rand(100000,999999)])}" //数据接口
+            ,limit:3 //每页显示数据
+            ,cols: [[//表头
+                {field:'id', width:136, title: '友链ID', sort: true}//sort 排序
+                ,{field:'name', width:136, title: '友链名称'}
+                ,{field:'url', width:186, title: '友链网址',edit:'text'}//edit即点即改的文本框
+                ,{field: 'logo',width:186, title: '图标', templet:'<div><img src="__PUBLIC__/uploads/friend/{{d.logo}}"></div>'}
+                ,{fixed: 'right',  width:156,title:'操作', toolbar: '#barDemo'}
+            ]]
+            ,page: true//开启分页
+        });
+
+        /**监听单元格编辑*/
+            //即点即改
+        table.on('edit(table_edit)',function(obj){
+            var value = obj.value, //得到修改后的值
+                    data = obj.data, //得到所在行所有键值
+                    field = obj.field; //得到字段
+            //console.log(value);
+            //console.log(data);
+            //console.log(field);
+
+            $.post(
+                    "{:url('friend/friendUpdate')}"
+                    ,{value:value,field:field,id:data.id}
+                    ,function(msg){
+                        //console.log(msg);
+                        layer.msg(msg.font,{icon:msg.code});
+                    } ,'json'
+            )
+
+        })
+
+        /**监听工具条 删除/编辑*/
+        table.on('tool(table_edit)', function(obj){ //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+            var data = obj.data; //获得当前行数据
+            //console.log(data);//ok
+            //普通删除
+            //location.href="{:url('friend/friendDel')}?friend_id="+data.friend_id;
+            if(obj.event=='del'){
+                //ajax 删除
+                layer.confirm('是否确认删除?',{icon:3},function(index){
+                    $.post(
+                            "{:url('friend/friendDel')}",
+                            {friend_id:data.id},
+                            function(msg){
+                                console.log(msg);
+                                layer.msg(msg.font,{icon:msg.code});
+                                if(msg.code==1){
+                                    table.reload('test');//重载表格
+                                }
+                            } ,'json'
+                    );
+                });
+            }else if(obj.event=='edit'){
+                //alert(12345678);
+                //修改
+                location.href="{:url('Friend/friendUpdateInfo')}?friend_id="+data.id;
+            }
+
+
+        });
+
+    });
+
+</script>
+
+

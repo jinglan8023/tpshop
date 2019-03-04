@@ -1,0 +1,142 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>管理员添加</title>
+    <link rel="stylesheet" href="__STATIC__/layui/css/layui.css" media="all">
+    <script src="__STATIC__/layui/jquery-3.2.1.min.js"></script>
+    <script src="__STATIC__/layui/layui.js"></script>
+
+</head>
+<body>
+
+<form class="layui-form" method="post">
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">管理员姓名</label>
+        <div class="layui-input-inline">
+            <input name="admin_name" class="layui-input" type="text" placeholder="请输入用户名"  lay-verify="username">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">密码</label>
+        <div class="layui-input-inline">
+            <input name="admin_pwd" class="layui-input" type="password" placeholder="请输入密码" autocomplete="off" lay-verify="pass">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">邮箱</label>
+            <div class="layui-input-inline">
+                <input name="admin_email" class="layui-input" type="email"  placeholder="如:123@qq.com" autocomplete="off" lay-verify="email">
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">电话</label>
+            <div class="layui-input-inline">
+                <input name="admin_tel" class="layui-input" type="tel" autocomplete="off" lay-verify="phone">
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-filter="*" lay-submit="">立即提交</button>
+            <button class="layui-btn layui-btn-primary" type="reset">重置</button>
+        </div>
+    </div>
+</form>
+
+<script>
+    $(function(){
+        //阻止提交
+           layui.use(['form','layer'], function(){
+                  var form = layui.form;
+                    var layer=layui.layer;
+                //js表单验证
+               form.verify({
+                //验证姓名
+                  username: function(value, item) { //value：表单的值、item：表单的DOM对象
+    //                  if(!new RegExp("^[a-zA-Z0-9_\u4e00-\u9fa5\\s·]+$").test(value)){
+    //                        return '用户名不能有特殊字符';
+    //                   }
+    //                 if(/(^\_)|(\__)|(\_+$)/.test(value)){
+    //                         return '用户名首尾不能出现下划线\'_\'';
+    //                     }
+    //                   if(/^\d+\d+\d$/.test(value)){
+    //                         return '用户名不能全为数字';
+    //                       }
+                      //正则表达式
+                      var font;
+                      var username_reg = /^[a-z_]\w{3,11}$/i;
+                          if(value==''){
+                              return "用户名不能为空";
+                          }else if(!username_reg.test(value)){
+                              return "用户名数字、字母、下划线，非数字开头4-12位";
+                          }else{
+                              $.ajax({
+                                url:"{:url('Admin/checkName')}",
+                                type:'post',
+                                data:{admin_name:value},
+                                async:false,//不是异步是同步
+                                success:function(msg){
+                                    if(msg=="no"){
+                                        font="用户名已存在";
+                                    }
+                                }
+                              });
+                                return font;
+                            }
+                         },
+                    //验证密码
+                    pass: function(value,item){
+                        var password_reg=/^[\S]{6,12}$/;
+                        if(value==''){
+                           return "密码必填";
+                        }else if(!password_reg.test(value)){
+                            return "密码必须6到12位，且不能出现空格";
+                        }
+                    }
+                    //邮箱 电话不验证了没事
+
+                    });
+
+
+                 //我们既支持上述函数式的方式，也支持下述数组的形式
+                //数组的两个值分别代表：[正则匹配、匹配不符时的提示文字]
+    //           ,pass: [
+    //                  /^[\S]{6,12}$/
+    //              ,'密码必须6到12位，且不能出现空格'
+    //            ]
+    //           });
+
+
+
+               //监听提交  通过ajax提交 不走action提交
+            form.on('submit(*)',function(data){
+                //console.log(data.elem);//被执行事件的元素dom对象，一般为botton对象
+                //console.log(data.form);//被执行提交的form对象，一般在存在form标签时才返回
+                //console.log(data.field);//当前容器的全部表单字段,名对值形势
+
+                $.post("{:url('Admin/adminAdd')}",data.field,function(msg){
+                        //console.log(msg);//ok
+                        layer.msg(msg.font,{icon:msg.code});
+                        if(msg.code==1){
+                        //跳展示页面  可不跳
+                            //location.href="{:url('admin/AdminList')}";
+                        }
+                },'json'
+
+                )
+                return false;//组织表单跳转,如果需要表单跳转，去掉即可
+            })
+        })
+    })
+</script>
+
+

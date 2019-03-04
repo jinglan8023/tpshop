@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>修改页面</title>
+    <link rel="stylesheet" href="__STATIC__/layui/css/layui.css" media="all">
+    <script src="__STATIC__/layui/jquery-3.2.1.min.js"></script>
+    <script src="__STATIC__/layui/layui.js"></script>
+
+</head>
+<body>
+
+<form class="layui-form" method="post">
+    <input type="hidden" id="admin_id" name="admin_id" value="{$data.admin_id}">
+    <div class="layui-form-item">
+        <label class="layui-form-label">管理员姓名</label>
+        <div class="layui-input-inline">
+            <input name="admin_name" value="{$data.admin_name}" class="layui-input" type="text" placeholder="请输入用户名" >
+        </div>
+    </div>
+    <!--lay-verify="username"
+    lay-verify="email"
+    lay-verify="phone"
+
+
+    -->
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">邮箱</label>
+            <div class="layui-input-inline">
+                <input name="admin_email" value="{$data.admin_email}" class="layui-input" type="email"  placeholder="如:123@qq.com" autocomplete="off" >
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">电话</label>
+            <div class="layui-input-inline">
+                <input name="admin_tel" value="{$data.admin_tel}" class="layui-input" type="tel" autocomplete="off" >
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-filter="*" lay-submit="">修改</button>
+            <button class="layui-btn layui-btn-primary" type="reset">重置</button>
+        </div>
+    </div>
+</form>
+
+<script>
+    $(function(){
+
+        //阻止提交
+        layui.use(['form','layer'], function(){
+            var form = layui.form;
+            var layer=layui.layer;
+            //js表单验证
+            form.verify({
+                //验证姓名
+                username: function(value) {
+                    //console.log(value);
+                   var admin_id=$("#admin_id").val();//console.log(admin_id);
+                    //正则表达式
+                    var font;
+                    var username_reg = /^[a-z_]\w{3,11}$/i;
+                    if(value==''){
+                        return "用户名不能为空";
+                    }else if(!username_reg.test(value)){
+                        return "用户名数字、字母、下划线，非数字开头4-12位";
+                    }else{
+                        $.ajax({
+                            url:"{:url('Admin/checkName')}",
+                            type:'post',
+                            data:{admin_name:value,admin_id:admin_id},//新值 隐藏框里的id
+                            async:false,//不是异步是同步
+                            success:function(msg){
+                            //console.log(msg);
+                                if(msg=="no"){
+                                    font="用户名已存在";
+                                }
+                            }
+                        });
+                        return font;
+                    }
+                }
+                //验证邮箱 电话格式就行
+
+            });
+
+
+            //我们既支持上述函数式的方式，也支持下述数组的形式
+            //数组的两个值分别代表：[正则匹配、匹配不符时的提示文字]
+            //           ,pass: [
+            //                  /^[\S]{6,12}$/
+            //              ,'密码必须6到12位，且不能出现空格'
+            //            ]
+            //           });
+
+
+
+            //监听提交  通过ajax提交 不走action提交
+            form.on('submit(*)',function(data){
+                //console.log(data.elem);//被执行事件的元素dom对象，一般为botton对象
+                //console.log(data.form);//被执行提交的form对象，一般在存在form标签时才返回
+                //console.log(data.field);//当前容器的全部表单字段,名对值形势
+
+                $.post("{:url('Admin/adminUpdateDo')}",data.field,function(msg){
+                            //console.log(msg);//ok
+
+                            if(msg.code==1){
+                                    layer.msg(msg.font,{icon:msg.code});
+                                //location.href="{:url('admin/AdminList')}";
+
+                            }
+                        },'json'
+
+                )
+                return false;//组织表单跳转,如果需要表单跳转，去掉即可
+            })
+        })
+    })
+</script>

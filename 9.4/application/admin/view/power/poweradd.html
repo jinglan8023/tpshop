@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>节点添加</title>
+    <!--<link rel="stylesheet" href="__STATIC__/layui/css/layui.css" media="all">-->
+    <script src="__STATIC__/layui/jquery-3.2.1.min.js"></script>
+    <script src="__STATIC__/layui/layui.js"></script>
+</head>
+<body>
+
+<form class="layui-form">
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">节点名称</label>
+        <div class="layui-input-inline">
+            <input name="node_name" class="layui-input" type="text" lay-verify="node_name" placeholder="请输入节点名称">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">节点路径</label>
+        <div class="layui-input-inline">
+            <input name="node_url" class="layui-input" type="text"  lay-verify="node_url" placeholder="请输入节点路径">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">父级权限</label>
+        <div class="layui-input-inline">
+            <select name="pid">
+                <option value="0">--请选择--</option>
+                {volist name="menu" id="v"}
+                <option value="{$v.node_id}">{$v.node_name}</option>
+                {/volist}
+            </select>
+        </div>
+    </div>
+
+    <!--<div class="layui-form-item">
+        <label class="layui-form-label">子级权限</label>
+        <div class="layui-input-inline">
+            <select name="brand_id">
+
+                <option value=""></option>
+
+            </select>
+        </div>
+    </div>-->
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">是否启用</label>
+        <div class="layui-input-block">
+            <input type="checkbox" checked name="status" lay-skin="switch" lay-filter="switchTest" lay-text="启用|禁用" checked value="1">
+        </div>
+    </div>
+
+    <div class="layui-input-block">
+        <button class="layui-btn" lay-filter="*" lay-submit="">立即提交</button>
+        <button class="layui-btn layui-btn-primary" type="reset">重置</button>
+    </div>
+    </div>
+</form>
+</body>
+</html>
+
+<script>
+    $(function(){
+        //阻止提交
+        layui.use(['form','layer'], function(){
+            var form = layui.form;
+            var layer=layui.layer;
+
+
+            //监听提交  通过ajax提交 不走action提交
+            form.on('submit(*)',function(data){
+                //data.field.power_content=layedit.getContent(index);
+                //console.log(data.elem);//被执行事件的元素dom对象，一般为botton对象
+                //console.log(data.form);//被执行提交的form对象，一般在存在form标签时才返回
+                console.log(data.field);//当前容器的全部表单字段,名对值形势
+                $.post(
+                    "{:url('Power/powerAdd')}"
+                    ,data.field
+                    ,function(data){
+                            //console.log(msg);//ok
+                            layer.msg(data.font,{icon:data.code});
+                            if(data.code==1){
+                                alert('ok');
+                            }else{
+                                alert('data.msg');
+                            }
+                        }
+                    ,'json'
+                )
+                return false;//组织表单跳转,如果需要表单跳转，去掉即可
+            })
+        })
+    })
+</script>

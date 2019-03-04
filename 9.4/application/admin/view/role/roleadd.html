@@ -1,0 +1,144 @@
+<form class="layui-form">
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">角色名称</label>
+        <div class="layui-input-inline">
+            <input name="role_name" class="layui-input" type="text" lay-verify="role_name" placeholder="请输入角色名称">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">是否启用</label>
+        <div class="layui-input-block">
+            <input type="checkbox" checked name="status" lay-skin="switch" lay-filter="switchTest" lay-text="启用|禁用" checked value="1">
+        </div>
+    </div>
+    <hr>
+    系统权限
+    <div>
+        {volist name="AllMenu" id="v"}
+            <div class="layui-form-item" pane="">
+                <strong class="parent">
+                    <input type="checkbox" name="power[]"  value="{$v.node_id}"  lay-skin="primary" title="{$v.node_name}">
+                </strong>
+                <label class="layui-form-label">
+
+                </label>
+                <br/>
+                <div class="layui-input-block"  style="margin-left:20%;">
+                {volist name="$v['son']" id="vv"}
+                    <input type="checkbox" class="son" name="power[]"  lay-filter="two"  value="{$vv.node_id}"  lay-skin="primary" title="{$vv.node_name}">
+                {/volist}
+                </div>
+            </div>
+        {/volist}
+    </div>
+
+
+    <div class="layui-input-block">
+        <button class="layui-btn" lay-filter="*" lay-submit="">立即提交</button>
+        <button class="layui-btn layui-btn-primary" type="reset">重置</button>
+    </div>
+
+</form>
+
+<script src="__STATIC__/layui/jquery-3.2.1.min.js"></script>
+<script src="__STATIC__/layui/layui.js"></script>
+
+<script>
+    $(function(){
+        //阻止提交
+        layui.use(['form'], function(){
+            var form = layui.form;
+            //var layer=layui.layer;
+
+            //js表单验证
+            form.verify({
+                //验证姓名
+                role_name: function(value, item) { //value：表单的值、item：表单的DOM对象
+                    if(value==''){
+                        return "角色名称必填";
+                    }
+                }
+            });
+
+        // 给父级复选框  点击事件
+        $(document).on('click',('.parent'),function(){
+            //alert(345);
+            if($(this).prop('checked') == true){
+                $(this).prop('checked',false);
+                $(this).parents('.layui-form-item')
+                .children('.layui-input-block')
+                .find('input').prop('checked',false);
+            }else{
+                $(this).prop('checked',true);
+                $(this).parents('.layui-form-item')
+                .children('.layui-input-block')
+                .find('input').prop('checked',true);
+            }
+            form.render();
+        })
+
+
+        //给子级复选框   点击事件
+       $(document).on('click',('.layui-input-block'),function(){
+            //alert(2134567);
+            if($(this).find().prop('checked')==true){
+                $(this).prop('checked',true);
+                $(this).parents('.layui-form-item').find('strong').find('input').prop('checked',true);
+           }else{
+                $(this).prop('checked',false);
+                $(this).parents('.layui-form-item').find('strong').find('input').prop('checked',true);
+            }
+            form.render();
+        })
+
+
+        /*form.on('checkbox(two)',function(data){
+            // console.log(data.othis);
+            var mark=0;
+            data.othis.parents('.layui-input-block').find('input').each(function(){
+                if($(this).prop('checked')==true){
+                    mark=1;
+                }
+            });
+            if($(this).find().prop('checked')==true){
+                $(this).prop('checked',true);
+                $(this).parents('.layui-form-item').find('strong').find('input').prop('checked',true);
+            }else{
+                $(this).prop('checked',false);
+                if(mark!=1){
+                    data.othis.parents('.layui-form-item').find('strong').find('input').prop('checked',true)
+                }
+                $(this).parents('.layui-form-item').find('strong').find('input').prop('checked',false);
+            }
+            form.render();
+        })
+*/
+
+
+            //监听提交  通过ajax提交 不走action提交
+            form.on('submit(*)',function(data){
+                //data.field.power_content=layedit.getContent(index);
+                //console.log(data.elem);//被执行事件的元素dom对象，一般为botton对象
+                //console.log(data.form);//被执行提交的form对象，一般在存在form标签时才返回
+                //console.log(data.field);//当前容器的全部表单字段,名对值形势
+                $.ajax(
+                        "{:url('Role/RoleAdd')}"
+                        ,data.field
+                        ,function(data){
+                            //console.log(msg);//ok
+                            layer.msg(data.font,{icon:data.code});
+                            if(data.code==1){
+                                alert('ok');
+                            }else{
+                                alert('data.msg');
+                            }
+                        }
+                        ,'json'
+                )
+                return false;//组织表单跳转,如果需要表单跳转，去掉即可
+            })
+        })
+    })
+</script>

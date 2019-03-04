@@ -1,0 +1,391 @@
+{layout name="layout/layout3"}
+<!--End Menu End-->
+<div class="i_bg">
+    <div class="content mar_20">
+        <img src="__STATIC__/index/images/img1.jpg" />
+    </div>
+
+    <!--Begin 第一步：查看购物车 Begin -->
+    <div class="content mar_20">
+        <table border="0" class="car_tab" style="width:1200px; margin-bottom:50px;" cellspacing="0" cellpadding="0">
+            <tr>
+                <td class="car_th" width="30"></td>
+                <td class="car_th" width="440">商品名称</td>
+                <td class="car_th" width="140">单价</td>
+                <td class="car_th" width="150">购买数量</td>
+                <td class="car_th" width="130">小计金额</td>
+                <td class="car_th" width="140">返还积分</td>
+                <td class="car_th" width="150">操作</td>
+            </tr>
+            <?php
+                $sum=0;
+            ?>
+            {volist name="car" id="v"}
+            <tr sku_id="{$v.sku_id}">
+                <td>
+                    {if condition="array_key_exists('car_id',$v)"}
+                    <input name="car[]" type="checkbox" class="car_id" value="{$v.car_id}">
+                    {else/}
+                    <input name="car[]" type="checkbox" class="car_id">
+                    {/if}
+                </td>
+                <td>
+                    <div class="c_s_img">
+                        <img src="__PUBLIC__/{$v.sku_img}" width="73" height="73" />
+                    </div>
+                    <a href="{:url('Product/productDetail',['sku_id'=>$v['sku_id']])}">
+                        <!--<input type="hidden" value="{$v.sku_id}">-->
+                        {$v.sku_name}
+                        <?php
+                        $money = ( $v['add_price'] - $v['sku_price'] );
+                        if( $money > 0){
+                        echo '<p style="color:#ff4e00">(比加入购物车时降价{$money}元)</p>';
+                        }
+                        ?>
+
+                    </a>
+                </td>
+                <td align="center">￥<span>{:formatMoney($v['sku_price'])}</span></td>
+                <td align="center">
+                    <div class="c_num">
+                        <input type="button" value="" class="car_btn_1" />
+                        <input type="text" value="{$v.buy_number}"
+                               {if condition="$v.sku_stock gt 200"}
+                               stock="200"
+                               {else/}
+                        stock="{$v.sku_stock}"
+                        {/if}
+                        name="" class="car_ipt" sku_id="{$v.sku_id}"/>
+                        <input type="button" value="" class="car_btn_2" />
+                    </div>
+                </td>
+                <?php
+                $this_price = $v['sku_price'] * $v['buy_number'];
+                ?>
+                <td align="center" style="color:#ff4e00;">￥
+                <span>
+                <!--{:formatMoney($v['sku_price'] * $v['buy_number'])}-->
+                {:formatMoney($this_price)}
+                </span>
+                </td>
+                <td align="center">26R</td>
+                <td align="center">
+                    <a href="javascript:;" class="carDel">删除</a>&nbsp; &nbsp;
+                    <a href="javascript:;" class="collection">加入收藏</a>
+                </td>
+            </tr>
+            {/volist}
+
+            <tr height="70">
+                <td colspan="6" style="font-family:'Microsoft YaHei'; border-bottom:0;">
+                    <!-- <label class="r_rad">
+                         <input type="checkbox" name="clear"/>
+                     </label>-->
+                    <label class="r_rad"><input type="checkbox" name="clear" id="boxAll" /></label><label class="r_txt" id="boxAll">全选</label>
+                    <input type="button" value="批量删除" id="bothDel">
+                    <input type="button" value="批量收藏" id="allCollection">
+                    <span class="fr">商品总价：
+                        <b style="font-size:22px; color:#ff4e00;">￥
+                            <span id="total">0.00</span>
+                        </b>
+                    </span>
+                </td>
+            </tr>
+            <tr valign="top" height="150">
+                <td colspan="6" align="right">
+                    <a href="{:url('Product/productList')}">
+                        <!--继续购物-->
+                        <img src="__STATIC__/index/images/buy1.gif" />
+                    </a>&nbsp; &nbsp;
+                    <a id="confirm" href="javascript:;">
+                        <!--确认结算-->
+                        <img src="__STATIC__/index/images/buy2.gif" />
+                    </a>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+    <!--End 第一步：查看购物车 End-->
+
+    <script type="text/javascript" src="__STATIC__/index/js/jquery-1.8.2.min.js"></script>
+
+    <script type="text/javascript">
+        var layer;
+        layui.use('layer',function(){
+            layer=layui.layer;
+        });
+
+        var index;
+        //点击减号
+        $('.car_btn_1').click(function(){
+            //加载层
+            index=layer.load(0,{shade:[0.5,'#ccc']});
+            //调方法
+            changeCarNumber( 1 , $(this).next() );
+            /* var number=$(this).next().val();
+             number=parseInt( number )-1;
+             if( number < 1){
+             number = 1;
+             }
+             $(this).next().val( number );*/
+        });
+        //点击加号
+        $('.car_btn_2').click(function(){
+            //加载层
+            index=layer.load(0,{shade:[0.5,'#ccc']});
+            //调方法
+            changeCarNumber( 2 , $(this).prev() );
+            /*var number=$(this).prev().val();
+             number=parseInt(number)+1;
+             var stock=$(this).prev().attr('stock');
+             if(number >= stock){
+             number=stock;
+             }
+             if(number <1){
+             number=1;
+             }
+             $(this).prev().val( number );*/
+        });
+        //失去焦点事件
+        $('.car_ipt').blur(function(){
+            changeCarNumber( 3 , $(this) );
+        })
+
+        //type=1 是减   type=2是 加
+        function changeCarNumber(type,input_ele){
+            var stock=parseInt( input_ele.attr('stock') );
+            var buy_number=parseInt( input_ele.val() );
+            if(isNaN(buy_number)){
+                buy_number=1;
+            }
+            if(buy_number==stock &&type==2){
+                return false;
+            }
+            if(type==1){
+                //buy_number -= buy_number;
+                buy_number = buy_number-1;
+            }else if(type==2){
+                //buy_number += buy_number;
+                buy_number = buy_number+1;
+            }
+            //购买数量小于1
+            if(buy_number<1){
+                buy_number=1;
+            }
+            //购买数量不能大于库存
+            if(buy_number>stock){
+                buy_number=stock;
+
+            }
+            //小计金额  单价*数量
+            var price = input_ele.parents('tr').find('td').eq(2).find('span').text().replace( /,/g,'');
+            var this_total= price * buy_number;
+            this_total=number_format(this_total,2,',',3);
+            input_ele.parents('tr').find('td').eq(4).find('span').text(this_total);
+            //发送ajax 请求   修改购物车数量
+            var sku_id=input_ele.attr('sku_id'); //alert(sku_id);return false;
+            index=layer.load(0,{shade:[0.5,'#ccc']});
+            $.ajax({
+                url:"{:url('Car/carUpdate')}",
+                data:'buy_number='+buy_number+'&sku_id='+sku_id,
+                dataType:'json',
+                type:'post',
+                async:true,
+                success:function( json_info ){
+                    if( json_info.status == 100){
+                        countCarMoney();
+                        input_ele.val( buy_number );
+                    }else{
+                        layer.msg(json_info.msg);
+                    }
+                }
+            })
+            layer.close(index);
+        }
+        $('[name^=car]').click(function(){
+            countCarMoney();
+        });
+
+        //总计金额
+        function countCarMoney(){
+            var sum=0.00;
+            //通过name 属性获取
+            $('[name^=car]').each(function(){
+                if($(this).prop('checked')==true){
+                    var this_price = $(this).parents('tr').find('td').eq(4).find('span').text().replace(/,/g,'');
+                    sum+=parseFloat(this_price);
+                }
+            });
+            sum=number_format(sum,2,',',3);
+            $('#total').text(sum);
+        }
+
+
+        /**
+         * number_format   逗号隔开  价格每三位一个逗号 封个函数
+         * @param number 传进来的数,
+         * @param bit 保留的小数位,默认保留两位小数,
+         * @param sign 为整数位间隔符号,默认为空格
+         * @param gapnum 为整数位每几位间隔,默认为3位一隔
+         * @type arguments的作用：arguments[0] == number(之一)
+         */
+        function number_format(number,bit,sign,gapnum){
+            //设置接收参数的默认值
+            var bit    = arguments[1] ? arguments[1] : 2 ;
+            var sign   = arguments[2] ? arguments[2] : ' ' ;
+            var gapnum = arguments[3] ? arguments[3] : 3 ;
+            var str    = '' ;
+
+            number     = number.toFixed(bit);//格式化
+            realnum    = number.split('.')[0];//整数位(使用小数点分割整数和小数部分)
+            decimal    = number.split('.')[1];//小数位
+            realnumarr = realnum.split('');//将整数位逐位放进数组 ["1", "2", "3", "4", "5", "6"]
+
+            //把整数部分从右往左拼接，每bit位添加一个sign符号
+            for(var i=1;i<=realnumarr.length;i++){
+                str = realnumarr[realnumarr.length-i] + str ;
+                if(i%gapnum == 0){
+                    str = sign+str;//每隔gapnum位前面加指定符号
+                }
+            }
+
+            //当遇到 gapnum 的倍数的时候，会出现比如 ",123",这种情况，所以要去掉最前面的 sign
+            str = (realnum.length%gapnum==0) ? str.substr(1) : str;
+            //重新拼接实数部分和小数位
+            realnum = str+'.'+decimal;
+            return realnum;
+        }
+
+        //全选
+        $('[name=clear]').click(function(){
+
+            if($(this).prop('checked')==true){
+                $('[name^=car]').prop('checked',true);
+            }else{
+                $('[name^=car]').prop('checked',false);
+            }
+            countCarMoney();
+        })
+
+        //点击结算
+        $('#confirm').click(function(){
+            //获取购物车的数据
+            var car_id='';
+            $('[name^=car]').each(function(){
+                if($(this).prop('checked')==true){
+                    if(car_id==''){
+                        car_id += $(this).val();
+                    }else{
+                        car_id += ',' + $(this).val();
+                    }
+                }
+            });
+            car_id =  car_id.substr(1);
+            //alert(car_id);return false;
+            if(car_id==''){
+                alert('必须选一件商品才能让结算');
+                return false;
+            }
+            //判断是否登录
+            var login="{$login}";
+            if(login==1){
+                //登陆的情况下
+                location.href="{:url('Order/order')}?car_id="+car_id;
+            }else{
+                //未登录的情况下
+                alert('没有登录,请先登录');
+                window.location.href="{:url('Login/login')}?refer="+window.location.href+"&car_id="+car_id;
+                return false;
+            }
+        })
+
+        //单删除数据
+        $('.carDel').click(function(){
+            var _this=$(this);
+            var _tr=_this.parents('tr');
+            var sku_id=$('.car_ipt').attr('sku_id');
+            var car_id= $('.car_id').val();
+            $.post(
+                    "{:url('car/carDel')}",
+                    {sku_id:sku_id,car_id:car_id},
+                    function(res){
+                        layer.msg(res.font,{icon:res.code});
+                        if(res.code==1){
+                            _tr.remove();
+                        }
+                    },
+                    'json'
+            )
+        });
+        //批量删除
+        $('#bothDel').click(function(){
+            var car_id='';
+            var sku_id='';
+            $('.car_id').each(function(index){
+                if($(this).prop('checked')==true){
+                    var cid=$(this).val();
+                    car_id+=','+cid;
+                    var sku_id=$(this).parents('tr').attr('sku_id');
+                    sku_id+=','+sku_id;
+                }
+            })
+            car_id=car_id.substr(1);
+            sku_id=sku_id.substr(1);
+            $.post(
+                    "{:url('car/carDel')}",
+                    {sku_id:sku_id,car_id:car_id},
+                    function(res){
+                        layer.msg(res.font,{icon:res.code});
+                        if(res.code==1){
+                            $('.car_id').each(function(index){
+                                if($(this).prop('checked')==true){
+                                    $(this).parents('tr').remove();
+                                }
+                            });
+                            if($('.car_id').length==0){
+                                setTimeout(function(){
+                                    location.href="{:url('car/carlist')}"},1000);
+                            }
+                        }
+                    },
+                    'json'
+            );
+            //console.log(cart_id);
+        })
+        //单收藏
+        $('.collection').click(function(){
+            var _this=$(this);
+            var sku_id=$('.car_ipt').attr('sku_id');
+            $.post(
+                    "{:url('car/addcollection')}",
+                    {sku_id:sku_id,type:1},
+                    function(res){
+                        layer.msg(res.font,{icon:res.code});
+                    },
+                    'json'
+            );
+        });
+        //批量收藏
+        $('#allCollection').click(function(){
+            var sku_id='';
+            $('.box').each(function(index){
+                if($(this).prop('checked')==true){
+                    var sku_id=$(this).parents('tr').attr('sku_id');
+                    sku_id+=','+id;
+                }
+            })
+            sku_id=sku_id.substr(1);
+            $.post(
+                    "{:url('car/addcollection')}",
+                    {sku_id:sku_id,type:2},
+                    function(res){
+                        layer.msg(res.font,{icon:res.code});
+                    },
+                    'json'
+            );
+        })
+
+
+
+    </script>

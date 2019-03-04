@@ -1,0 +1,132 @@
+<script src="__STATIC__/layui/jquery-3.2.1.min.js"></script>
+<div>
+<table class="layui-table">
+
+    <tr>
+        <th>分类id</th>
+        <th>分类名称</th>
+        <th>是否展示</th>
+        <th>是否在导航栏展示</th>
+        <th>分类添加时间</th>
+        <th>操作</th>
+    </tr>
+
+    {volist name="data" id="v"}
+    <tr class="showHide" pid="{$v.pid}" cate_id="{$v.cate_id}" style="display:none">
+        <td>
+            {:str_repeat('&nbsp;&nbsp;',$v.level*2)}
+            <a href="javascript:;" class="showCate">+</a>
+            {$v.cate_id}
+        </td>
+        <td id="{$v.cate_id}" class="change">
+            <span class="show">{:str_repeat('&nbsp;&nbsp;',$v.level*2)}{$v.cate_name}</span>
+           <input class="change" style="display: none;" type="text" column="cate_name" cate_id="{$v.cate_id}" value="{$v.cate_name}">
+        </td>
+        <td>
+            {if condition="$v.cate_show" eq 1}
+                √
+            {else/}
+                ×
+            {/if}
+        </td>
+        <td>
+            {if condition="$v.cate_navshow" eq 1}
+                √
+            {else/}
+                ×
+            {/if}
+        </td>
+        <td>{$v.cate_time}</td>
+        <td>
+            <a href="{:url('Category/cateDel')}?cate_id={$v.cate_id}">删除</a>||
+            <a href="{:url('Category/cateUpdate')}?cate_id={$v.cate_id}">修改</a>
+        </td>
+    </tr>
+    {/volist}
+
+</table>
+</div>
+<script>
+    $(function(){
+        layui.use(['layer'],function(){
+            //展示顶级分类信息
+            showTr(0);
+                //显示 函数
+                function showTr(cate_id){
+                    //页面一加载 获取所有的tr 展示pid=0的数据
+                    var _tr=$('.showHide');
+                    _tr.each(function(index){
+                        //console.log(index);//索引下标
+                        var pid=$(this).attr('pid');
+                        //console.log(pid);
+                        if(pid==cate_id){
+                            $(this).show();
+                        }
+                    })
+                }
+                //隐藏 函数
+                function hideTr(cate_id){
+                    //页面一加载 获取所有的tr 展示pid=0的数据
+                    var _tr=$('.showHide');
+                    _tr.each(function(index){
+                        //console.log(index);//索引下标
+                        var pid=$(this).attr('pid');
+                        //console.log(pid);
+                        if(pid==cate_id){
+                            $(this).hide();
+                            var new_cate_id=$(this).attr('cate_id');
+                            hideTr(new_cate_id);//后两行  点祖父  则儿子 孙子都隐藏后代元素
+                        }
+                    })
+
+                }
+
+            $(function(){
+                //给超链接加点击事件
+                $(".showCate").click(function(){
+                //获取当前的文本值
+                    var sign=$(this).html();
+                    //获取当前分类的id
+                    var cate_id=$(this).parents('tr').attr('cate_id');//console.log(cate_id);
+                    if(sign=="+"){
+                        //展示此分类下的子类  调上面展示的函数
+                        showTr(cate_id);
+                        $(this).html("-");
+                    }else{
+                        //隐藏此分类下的子类  调上面隐藏的函数
+                        hideTr(cate_id);
+                        $(this).html("+");
+                    }
+                });
+            })
+            //即点即改
+            $(function(){
+                //给类为show点击事件
+                $(".show").click(function(){
+                    $(this).next('input').show();//下兄弟节点展示
+                    $(this).hide();//自己隐藏
+                })
+                //给文本框失去焦点事件
+                $(".change").blur(function(){
+                   var cate_name=$(this).attr('column');
+                   var cate_id=$(this).attr('cate_id');
+                    var new_val=$(this).val();
+                    var _this=$(this);
+                   //console.log(cate_name);console.log(cate_id); console.log(new_val);
+                    $.post("{:url('Category/cateU')}",{name:cate_name,id:cate_id,val:new_val},function(msg){
+                        //console.log(msg);
+                        layer.msg(msg.font,{icon:msg.code});
+                        if(msg.code==1){
+                            _this.hide();
+                            _this.prev('span').hide();
+                            layer.msg(msg.font,{icon:msg.code});
+                        }
+                    },'json')
+                })
+            })
+        })
+    })
+</script>
+
+
+

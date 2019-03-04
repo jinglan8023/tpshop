@@ -1,0 +1,163 @@
+{layout name="layout/layout3"}
+<!--End Menu End-->
+<div class="i_bg">
+    <div class="content mar_20">
+        <img src="__STATIC__/index/images/img2.jpg" />
+    </div>
+
+    <!--Begin 第二步：确认订单信息 Begin -->
+    <div class="content mar_20">
+        <div class="two_bg">
+            <div class="two_t">
+                <span class="fr"><a href="#">修改</a></span>商品列表
+            </div>
+            <table border="0" class="car_tab" style="width:1110px;" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td class="car_th" width="550">商品名称</td>
+                    <td class="car_th" width="140">单价</td>
+                    <td class="car_th" width="150">购买数量</td>
+                    <td class="car_th" width="130">小计</td>
+                    <td class="car_th" width="140">返还积分</td>
+                </tr>
+                <?php $sum=0.00;$score=0;?>
+               {volist name="car" id='v'}
+               <?php
+                $sum+=$v['sku_price']*$v['buy_number'];
+
+               ?>
+                <tr class="car_tr">
+                    <td>
+                        <div class="c_s_img"><img src="/{$v.sku_img}" width="73" height="73" /></div>
+                        {$v.sku_name}
+                    </td>
+                    <td align="center">{:formatMoney($v.sku_price)}</td>
+                    <td align="center">{$v.buy_number}</td>
+                    <td align="center" style="color:#ff4e00;">￥{:formatMoney($v.sku_price*$v.buy_number)}</td>
+                    <td>积分*件数</td>
+                </tr>
+                {/volist}
+                <tr>
+                    <td colspan="5" align="right" style="font-family:'Microsoft YaHei';">
+                        商品总价：￥{:formatMoney($sum)}； 返还积分 777R
+                    </td>
+                </tr>
+            </table>
+
+            <div class="two_t">
+                <span class="fr">
+                   <button><a href="{:url('UserAddress/address')}">新增收货地址</a></button>
+                </span>收货人信息
+            </div>
+            {if condition="$addressInfo eq []"}
+            <input type="button" value="新建收货地址" style="margin-left:5%;"><br>
+            {/if}
+            <div style="height:300px;overflow-y:scroll;">
+                {volist name="addressInfo" id="v"}
+                <table border="0" class="peo_tab" style="width:1110px;margin-top:10px;" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td>
+                            <input type="radio" checked name="address_id" value="{$v.address_id}">
+                        </td>
+                        <td>
+                            {$v.province}{$v.city}{$v.district}{$v.address_detail}{$v.address_man}{$v.address_tel}  收
+                        </td>
+                        <td>
+                            <a href="{:url('UserAddress/addressUpdate')}?address_id={$v.address_id}">修改</a>
+                        </td>
+                    </tr>
+                </table>
+                {/volist}
+            </div>
+            <div class="two_t">
+                支付方式
+            </div>
+            <ul class="pay">
+                <li class="checked">支付宝<div class="ch_img"></div></li>
+                <li>银行汇款/转账<div class="ch_img"></div></li>
+                <li>货到付款<div class="ch_img"></div></li>
+            </ul>
+
+            <div class="two_t">
+                其他信息
+            </div>
+            <table border="0" class="car_tab" style="width:1110px;" cellspacing="0" cellpadding="0">
+                <tr valign="top">
+                    <td align="right" style="padding-right:0;"><b style="font-size:14px;">订单附言：</b></td>
+                    <td style="padding-left:0;">
+                        <textarea class="add_txt" name="order_note" style="width:860px; height:50px;"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="right" style="padding-right:0;"><b style="font-size:14px;">缺货处理：</b></td>
+                    <td>
+                        <label class="r_rad"><input type="checkbox" name="none" checked="checked" /></label><label class="r_txt" style="margin-right:50px;">等待所有商品备齐后再发</label>
+                        <label class="r_rad"><input type="checkbox" name="none" /></label><label class="r_txt" style="margin-right:50px;">取下订单</label>
+                        <label class="r_rad"><input type="checkbox" name="none" /></label><label class="r_txt" style="margin-right:50px;">与店主协商</label>
+                    </td>
+                </tr>
+            </table>
+            <input type="hidden" readonly name="pay_type" value="">
+            <table border="0" style="width:900px; margin-top:20px;" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td align="right">
+                        该订单完成后，您将获得 <font color="#ff4e00">{$score}</font> 积分<br />
+                        <!--商品总价: <font color="#ff4e00">￥1815.00</font>  + 配送费用: <font color="#ff4e00">￥15.00</font>-->
+                    </td>
+                </tr>
+                <tr height="70">
+                    <td align="right">
+                        <b style="font-size:14px;">应付款金额：
+                            <span style="font-size:22px; color:#ff4e00;">￥{:formatMoney($sum)}</span>
+                        </b>
+                    </td>
+                </tr>
+                <tr height="70">
+                    <td align="right">
+                        <a class="submit" href="javascript:;">
+                            <img src="__STATIC__/index/images/btn_sure.gif" />
+                        </a>
+                    </td>
+                </tr>
+            </table>
+
+
+
+        </div>
+    </div>
+    <!--End 第二步：确认订单信息 End-->
+    <!--<script type="text/javascript" src="__STATIC__/index/js/jquery-3.2.1.min.js"></script>-->
+
+    <script type="text/javascript">
+        var layer;
+        layui.use('layer',function(){
+            layer=layui.layer;
+        })
+
+        $('.pay li').click(function(){
+            $('.pay li').removeClass('checked');
+            $('[name=pay_type]').val( ($(this).index()+1));
+            $(this).addClass('checked');
+        })
+        $('.submit').click(function() {
+            var car_id = "<?php echo request()->param('car_id');?>";
+            var pay_type = $('[name=pay_type]').val();
+            var note = $('[name=order_note]').val();//alert(note);
+            var address_id=$('[name=address_id]').val();
+            //alert(address_id);
+            $.ajax({
+                url: "{:url('Order/submitOrder')}",
+                type: 'post',
+                dataType: 'json',
+                data: 'car_id=' + car_id + '&address_id=' + address_id +'&pay_tpe=' + pay_type + '&note=' + note,
+                success: function (json_info) {
+                //console.log(json_info);return false;
+                    if(json_info.status==100){
+                    var url="{:url('Order/createSuccess',['order_no'=>\'__ORDER_NO__\'])}";
+                    url=url.replace('__ORDER_NO__',json_info.msg.order_no);
+                        window.location.href=url;
+                    }
+                }
+
+            })
+        })
+    </script>

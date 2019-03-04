@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>商品添加</title>
+    <!--<link rel="stylesheet" href="__STATIC__/layui/css/layui.css" media="all">-->
+    <script src="__STATIC__/layui/jquery-3.2.1.min.js"></script>
+    <script src="__STATIC__/layui/layui.js"></script>
+</head>
+<body>
+
+<form class="layui-form">
+    <div class="layui-form-item">
+        <label class="layui-form-label">参与活动商品</label>
+        <div class="layui-input-inline">
+            <select name="buy_goods">
+                <option value="0">--请选择--</option>
+            {volist name="goodsInfo" id="v"}
+                <option value="{$v.goods_name}">{$v.goods_name}</option>
+            {/volist}
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">赠送商品</label>
+        <div class="layui-input-inline">
+            <select name="present_goods">
+                <option value="0">--请选择--</option>
+                {volist name="goodsInfo" id="v"}
+                <option value="{$v.goods_name}">{$v.goods_name}</option>
+                {/volist}
+
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">促销规则</label>
+        <div class="layui-input-inline" name="rul">
+            <div class="again">
+                满<input class="layui-input buy_number" name="buy_number" type="text">件送
+                <input class="layui-input present_number" name="present_number" type="text">
+                <input type="button" value="添加规则" class="addnewRul">
+            </div>
+        </div>
+    </div>
+
+   <div class="layui-input-block">
+        <button class="layui-btn addRul" lay-filter="*" lay-submit="">立即提交</button>
+        <button class="layui-btn layui-btn-primary" type="reset">重置</button>
+    </div>
+    </div>
+</form>
+</body>
+</html>
+
+<script>
+    $(function(){
+
+        $(document).on('click',('.addnewRul'),function(){
+
+            $(this).parent('.again').append("<div class='again'>"+
+                    "满<input class='layui-input buy_number' name='buy_number[]' type='text'>件送"+
+                    " <input class='layui-input present_number' name='present_number[]' type='text'>"+
+                    "<input type='button' value='添加规则' class='addnewRul'>"+
+                    "</div>");
+
+        })
+
+    })
+
+
+
+    $(function(){
+        layui.use(['form','layer'], function(){
+            var form = layui.form;
+            var layer=layui.layer;
+
+            //监听提交  通过ajax提交 不走action提交
+            form.on('submit(*)',function(data){
+                //console.log(data.field);//当前容器的全部表单字段,名对值形势
+                $.post(
+                    "{:url('Goods/goodsPresentAdd')}"
+                    ,data.field
+                    ,function(msg){
+                            //console.log(msg);//ok
+                            layer.msg(msg.font,{icon:msg.code});
+                            if(msg.code==1){
+                                alert('保存ok');
+                            }
+                        },'json'
+
+                )
+                return false;//组织表单跳转,如果需要表单跳转，去掉即可
+            })
+        })
+    })
+</script>

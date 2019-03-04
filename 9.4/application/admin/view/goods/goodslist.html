@@ -1,0 +1,141 @@
+
+<!--根据分类 品牌  关键字  搜索-->
+<div>
+<form class="layui-form">
+
+    分类:<div class="layui-input-inline">
+        <select name="cate_name">
+            <option value="0">--请选择--</option>
+            {volist name="cateData" id="v"}
+            <option value="{$v.cate_name}">{:str_repeat('&nbsp;&nbsp;',$v.level*2)}{$v.cate_name}</option>
+            {/volist}
+        </select>
+    </div>
+
+    品牌:<div class="layui-input-inline">
+        <select name="brand_name">
+            {volist name="brandData" id="v"}
+            <option value="{$v.brand_name}">{$v.brand_name}</option>
+            {/volist}
+        </select>
+    </div>
+
+        <div class="layui-input-inline">
+            <input  class="layui-input" name="goods_name" type="text" placeholder="请输入搜索关键词" autocomplete="off" lay-verify="pass">
+        </div>
+    <div class="layui-btn-group">
+        <button class="layui-btn" lay-filter="*" lay-submit="">搜索</button>
+    </div>
+
+</form>
+</div>
+
+
+<table class="layui-hide" id="test" lay-filter="table_edit"></table>
+
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<script src="__STATIC__/layui/jquery-3.2.1.min.js"></script>
+<script src="__STATIC__/layui/layui.js"></script>
+
+
+<script>
+    layui.use(['table','layer','form'], function(){
+        var table = layui.table;
+        var layer=layui.layer;
+        var form=layui.form;
+        /**动态渲染表格*/
+      var tableIns=table.render({
+            elem: '#test'
+            ,url:"{:url('Goods/goodsInfo')}" //数据接口
+            ,limit:3 //每页显示数据
+            ,cols: [[//表头
+                {field:'goods_id', width:136, title: '商品ID', sort: true}//sort 排序
+                ,{field:'goods_name', width:136, title: '商品名称',edit:'text'}
+                ,{field:'goods_selfprice', width:186, title: '商品售价',edit:'text'}//edit即点即改的文本框
+                ,{field:'goods_marketprice', width:186, title: '商品市场价',edit:'text'}
+                ,{field:'goods_up', width:186, title: '是否上架',edit:'text'}
+                ,{field:'goods_new', width:186, title: '新品',edit:'text'}
+                ,{field:'goods_best', width:186, title: '精品',edit:'text'}
+                ,{field:'goods_hot', width:186, title: '热卖',edit:'text'}
+                ,{field:'goods_best', width:186, title: '库存',edit:'text'}
+                ,{field:'goods_score', width:186, title: '积分',edit:'text'}
+                ,{field:'cate_name', width:186, title: '所属分类'}
+                ,{field: 'brand_name',width:186, title: '品牌'}
+                ,{fixed: 'right',  width:156,title:'操作', toolbar: '#barDemo'}
+            ]]
+            ,page: true//开启分页
+        });
+
+        /**监听单元格编辑*/
+            //即点即改
+        table.on('edit(table_edit)',function(obj){
+            var value = obj.value, //得到修改后的值
+                    data = obj.data, //得到所在行所有键值
+                    field = obj.field; //得到字段
+           /* console.log(value);
+            console.log(data);
+            console.log(field);*/
+
+            $.post(
+                    "{:url('Goods/goodsUpdate')}"
+                    ,{value:value,field:field,id:data.goods_id}
+                    ,function(msg){
+                        //console.log(msg);
+                        layer.msg(msg.font,{icon:msg.code});
+
+                    } ,'json'
+            )
+
+        })
+
+        /**监听工具条 删除/编辑*/
+        table.on('tool(table_edit)', function(obj){ //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+            var data = obj.data; //获得当前行数据
+            //console.log(data);//ok
+            //普通删除
+            //location.href="{:url('goods/goodsDel')}?goods_id="+data.goods_id;
+            if(obj.event=='del'){
+                //ajax 删除
+                layer.confirm('是否确认删除?',{icon:3},function(index){
+                    $.post(
+                            "{:url('Goods/goodsDel')}",
+                            {goods_id:data.goods_id},
+                            function(msg){
+                                console.log(msg);
+                                layer.msg(msg.font,{icon:msg.code});
+                                if(msg.code==1){
+                                    table.reload('test');//重载表格
+                                }
+                            } ,'json'
+                    );
+                });
+            }else if(obj.event=='edit'){
+                //alert(12345678);
+                //修改
+                location.href="{:url('Goods/goodsUpdateInfo')}?goods_id="+data.goods_id;
+            }
+
+
+        });
+        /**监听提交  搜索*/
+        form.on('submit(*)',function(data){
+            //console.log(data.elem);//被执行事件的元素dom对象，一般为botton对象
+            //console.log(data.form);//被执行提交的form对象，一般在存在form标签时才返回
+            console.log(data.field);//当前容器的全部表单字段,名对值形势
+            tableIns.reload({
+                where:data.field
+            });
+
+            return false;//组织表单跳转,如果需要表单跳转，去掉即可
+        })
+
+
+    });
+
+</script>
+
+
